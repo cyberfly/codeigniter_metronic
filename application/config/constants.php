@@ -17,7 +17,6 @@ define('FILE_READ_MODE', 0644);
 define('FILE_WRITE_MODE', 0666);
 define('DIR_READ_MODE', 0755);
 define('DIR_WRITE_MODE', 0777);
-define('SECRETTOKEN', 1326654564566454);
 
 /*
 |--------------------------------------------------------------------------
@@ -49,8 +48,7 @@ define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
 define('SECRETTOKEN', 'akfoej^&*%$()23435672JFKJD$%^^');
 define('SUPER_ADMIN_GROUP',1);
 define('MEMBER_GROUP',2);
-define('ADMIN_GROUP',3);
-define('STAFF_GROUP',4);
+define('USER_GROUP',3);
 
 /* End of file constants.php */
 /* Location: ./application/config/constants.php */
