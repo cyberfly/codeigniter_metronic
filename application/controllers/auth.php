@@ -19,6 +19,8 @@ class Auth extends CI_Controller {
 
 		$this->lang->load('auth');
 		$this->load->helper('language');
+		$this->load->model('user_model');        
+        $this->load->model('user_info_model');  
 	}
 
 	//redirect if needed, otherwise display the user list
@@ -57,7 +59,7 @@ class Auth extends CI_Controller {
 		$this->data['title'] = "Login";
 
 		//validate form input
-		$this->form_validation->set_rules('identity', 'Identity', 'required');
+		$this->form_validation->set_rules('username', 'Username', 'required');
 		$this->form_validation->set_rules('password', 'Password', 'required');
 
 		if ($this->form_validation->run() == true)
@@ -66,7 +68,10 @@ class Auth extends CI_Controller {
 			//check for "remember me"
 			$remember = (bool) $this->input->post('remember');
 
-			if ($this->ion_auth->login($this->input->post('identity'), $this->input->post('password'), $remember))
+			$username = $this->input->post('username');
+			$password = $this->input->post('password');
+
+			if ($this->ion_auth->login($username, $password, $remember))
 			{				
 				//if the login is successful
 				//redirect them back to the home page
@@ -98,7 +103,9 @@ class Auth extends CI_Controller {
 				'type' => 'password',
 			);
 
-			$this->_render_page('auth/login', $this->data);
+		    $this->data['main'] = 'auth/login';		    
+
+			$this->load->view('base_template/login_base',$this->data);			
 		}
 	}
 
@@ -393,6 +400,113 @@ class Auth extends CI_Controller {
 
 			//redirect them back to the auth page
 			redirect('auth', 'refresh');
+		}
+	}
+
+	//register a new user front end
+
+	function register()
+	{
+		$this->data['title'] = "Create User";
+		
+		$tables = $this->config->item('tables','ion_auth');
+		
+		//validate form input
+		$this->form_validation->set_rules('fullname', $this->lang->line('create_user_validation_fname_label'), 'required|xss_clean');
+		$this->form_validation->set_rules('username', 'Username', 'required|xss_clean|is_unique['.$tables['users'].'.username]');
+		$this->form_validation->set_rules('email', $this->lang->line('create_user_validation_email_label'), 'required|valid_email|is_unique['.$tables['users'].'.email]');
+		$this->form_validation->set_rules('password', $this->lang->line('create_user_validation_password_label'), 'required|min_length[' . $this->config->item('min_password_length', 'ion_auth') . ']|max_length[' . $this->config->item('max_password_length', 'ion_auth') . ']|matches[rpassword]');
+		$this->form_validation->set_rules('rpassword', $this->lang->line('create_user_validation_password_confirm_label'), 'required');
+
+		if ($this->form_validation->run() == true)
+		{
+			$username = strtolower($this->input->post('username'));
+			$email    = strtolower($this->input->post('email'));
+			$password = $this->input->post('password');
+
+			$group = array(USER_GROUP);
+
+			$additional_data = array(
+				'first_name' => $this->input->post('fullname'),
+				'last_name'  => '',
+				'company'    => '',
+				'phone'      => '',
+			);
+
+			if ($user_id = $this->ion_auth->register($username, $password, $email, $additional_data, $group))
+			{
+				//check to see if we are creating the user
+				//redirect them back to the admin page
+
+				$user_info_data = array(
+					    			'user_id'=>$user_id,				    			
+					    			'address'=>'',
+					    			'state'=>'',
+					    			'city'=>'',
+					    			'office_no'=>'',
+					    			'fax_no'=>'',
+					    			'site_language'=>'english'
+					    			);
+
+				$this->user_info_model->insert($user_info_data);			
+
+				$this->session->set_flashdata('success', $this->ion_auth->messages());
+				redirect("auth/login");
+			}
+			
+		}
+		else
+		{
+			//display the create user form
+			//set the flash data error message if there is one
+			$this->data['message'] = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('message')));
+
+			$this->data['first_name'] = array(
+				'name'  => 'first_name',
+				'id'    => 'first_name',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('first_name'),
+			);
+			$this->data['last_name'] = array(
+				'name'  => 'last_name',
+				'id'    => 'last_name',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('last_name'),
+			);
+			$this->data['email'] = array(
+				'name'  => 'email',
+				'id'    => 'email',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('email'),
+			);
+			$this->data['company'] = array(
+				'name'  => 'company',
+				'id'    => 'company',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('company'),
+			);
+			$this->data['phone'] = array(
+				'name'  => 'phone',
+				'id'    => 'phone',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('phone'),
+			);
+			$this->data['password'] = array(
+				'name'  => 'password',
+				'id'    => 'password',
+				'type'  => 'password',
+				'value' => $this->form_validation->set_value('password'),
+			);
+			$this->data['password_confirm'] = array(
+				'name'  => 'password_confirm',
+				'id'    => 'password_confirm',
+				'type'  => 'password',
+				'value' => $this->form_validation->set_value('password_confirm'),
+			);
+
+			$this->data['main'] = 'auth/register';		    
+
+			$this->load->view('base_template/login_base',$this->data);
 		}
 	}
 

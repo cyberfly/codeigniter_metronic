@@ -30,6 +30,39 @@ class User extends MY_Controller {
 	
 	function add_user()
 	{
+		// prevent access if not admin
+
+		if(!$this->ion_auth->in_group('admin')){
+
+			echo "permission denied";
+			exit;
+		}
+
+		//uncomment this code below if you want to allow the function to specific role
+		//example allow for user group only
+
+		/*if(!$this->ion_auth->in_group('user')){
+
+			echo "permission denied";
+			exit;
+		}*/
+
+		// example allow fo user and subscriber only. please define the group in database and also config/constants.php
+
+		/*if(!$this->ion_auth->in_group('user') && !$this->ion_auth->in_group('subscriber')){
+
+			echo "permission denied";
+			exit;
+		}*/
+
+		// example show something to user group only
+
+		/*if($this->ion_auth->in_group('user')){
+
+			echo "only user group can see this";
+			
+		}*/
+
 		$this->load->library('form_validation');
 
 		$this->form_validation->set_rules('username', $this->lang->line('username'), 'trim|required|alpha_dash|is_unique[tb_users.username]');
@@ -104,6 +137,14 @@ class User extends MY_Controller {
 
 	function edit_user()
 	{
+		// prevent access if not admin
+
+		if(!$this->ion_auth->in_group('admin')){
+
+			echo "permission denied";
+			exit;
+		}
+
 		$this->load->library('form_validation');
 
 		//get id for checking username on update
@@ -227,5 +268,5 @@ class User extends MY_Controller {
 
 }
 
-/* End of file welcome.php */
-/* Location: ./application/controllers/welcome.php */
+/* End of file user.php */
+/* Location: ./application/controllers/user.php */
